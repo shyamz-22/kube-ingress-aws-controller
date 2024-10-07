@@ -187,6 +187,13 @@ func TestFindBestMatchingCertificate(t *testing.T) {
 	saValidWildcardCert := createDummyCertDetail(t, dummyArn, []string{invalidDomain, invalidHostname, invalidWildcardDomain, wildcardDomain}, before, after)
 	saMultipleValidCert := createDummyCertDetail(t, dummyArn, []string{wildcardDomain, validHostname, invalidDomain, invalidHostname, invalidWildcardDomain}, before, after)
 
+	// Valid Certificates with SANs
+	anotherValidHostname := "bar." + domain
+	currentSANs := []string{validHostname, anotherValidHostname}
+	newSANs := []string{anotherValidHostname}
+	saValidCertWithCurrentSANs := createDummyCertDetail(t, dummyArn, currentSANs, before, after)
+	saValidCertWithNewSANs := createDummyCertDetail(t, dummyArn, newSANs, before, after.Add(time.Hour*24*365))
+
 	// simple invalid time cases
 	invalidTimeCert1 := createDummyCertDetail(t, dummyArn, []string{domain}, after, before)
 	invalidTimeCert2 := createDummyCertDetail(t, dummyArn, []string{domain}, after, after)
@@ -398,6 +405,12 @@ func TestFindBestMatchingCertificate(t *testing.T) {
 			hostname:  validHostname,
 			cert:      []*CertificateSummary{validCertFor6dUntill10d, validCertFor1dUntill7d1sLess},
 			expect:    validCertFor6dUntill10d,
+			condition: certValidMatchFunction,
+		}, {
+			msg:       "Found best match with longer valid certificate",
+			hostname:  anotherValidHostname,
+			cert:      []*CertificateSummary{saValidCertWithCurrentSANs, saValidCertWithNewSANs},
+			expect:    saValidCertWithNewSANs,
 			condition: certValidMatchFunction,
 		},
 	} {
